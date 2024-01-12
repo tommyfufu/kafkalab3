@@ -12,5 +12,10 @@
 #### Consumer v0&1
 [Consumer v0&1](src/main/java/kafka/myconsumer)
 
+### 解法二：替資料加上順序label
+:::info
+待補
+:::
+
 ## 備註
 第一次寫Java，對整個Java與Maven不熟悉，之後會將整個專案調整好
