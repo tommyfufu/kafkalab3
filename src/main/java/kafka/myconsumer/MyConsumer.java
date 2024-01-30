@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
+import java.util.TreeMap;
+
 public class MyConsumer{
     private static final Logger log = LoggerFactory.getLogger(MyConsumer.class);
     public static void main(String[] args) {
@@ -33,6 +35,7 @@ public class MyConsumer{
 
         // get a reference to the current thread
         final Thread mainThread = Thread.currentThread();
+        TreeMap<Integer, String> orderedMessages = new TreeMap<>();
 
         // adding the shutdown hook
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -52,13 +55,25 @@ public class MyConsumer{
         try{
             consumer.subscribe(Collections.singletonList(topic));
             System.out.println("Start listen incoming messages ...");
-            while(true){
+            while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
 
-                for (ConsumerRecord<String, String> record : records){
-                    log.info("Key: " + record.key() + ", Value: " + record.value());
-                    log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
+                for (ConsumerRecord<String, String> record : records) {
+                    try {
+                        String value = record.value();
+                        int order = Integer.parseInt(value.split(" ")[1]);
+                        orderedMessages.put(order, value);
+                        log.info("Key: " + record.key() + ", Value: " + record.value());
+                        log.info("Partition: " + record.partition() + ", Offset:" + record.offset());
+                    } catch (NumberFormatException e) {
+                        log.error("Error parsing sequence number from message: " + record.value(), e);
+                    }
                 }
+
+                for (String message : orderedMessages.values()) {
+                    System.out.println("Received in order: " + message);
+                }
+                orderedMessages.clear();
             }
         }catch(WakeupException e){
             log.info("Wake up exception!");
